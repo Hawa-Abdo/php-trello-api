@@ -16,27 +16,33 @@ class Labels extends AbstractApi
     protected $path = 'cards/#id#/labels';
 
     /**
-     * Set a given card's labels
-     * @link https://trello.com/docs/api/card/#put-1-cards-card-id-or-shortlink-labels
+     * Get labels related to a given card
+     * @link https://trello.com/docs/api/card/#get-1-cards-card-id-or-shortlink
      *
-     * @param string $id     the card's id or short link
-     * @param array  $labels the labels
+     * @param string $id     the card's
+     * @param array  $params optional parameters
      *
-     * @return array card info
-     *
-     * @throws InvalidArgumentException If a label does not exist
+     * @return array
      */
-    public function set($id, array $labels)
+    public function all($id, array $params = array('fields' => 'labels'))
     {
-        foreach ($labels as $label) {
-            if (!in_array($label, array('all', 'green', 'yellow', 'orange', 'red', 'purple', 'blue'))) {
-                throw new InvalidArgumentException(sprintf('Label "%s" does not exist.', $label));
-            }
-        }
+        return $this->get('cards/'.rawurlencode($id), $params)['labels'];
+    }
 
-        $labels = implode(',', $labels);
+    /**
+     * Add a label to a given card
+     * @link https://trello.com/docs/api/card/#post-1-cards-card-id-or-shortlink-labels
+     *
+     * @param string $id       the card's id or short link
+     * @param array  $params   the label attributes
+     *
+     * @return array
+     */
+    public function add($id, array $params = array())
+    {
+        $this->validateRequiredParameters(array('color'), $params);
 
-        return $this->put($this->getPath($id), array('value' => $labels));
+        return $this->post($this->getPath($id), $params);
     }
 
     /**
@@ -52,7 +58,11 @@ class Labels extends AbstractApi
      */
     public function remove($id, $label)
     {
-        if (!in_array($label, array('green', 'yellow', 'orange', 'red', 'purple', 'blue'))) {
+        $labels = array_map(function(array $label){
+            return $label['color'];
+        }, $this->all($id));
+
+        if (!in_array($label, $labels)) {
             throw new InvalidArgumentException(sprintf('Label "%s" does not exist.', $label));
         }
 
