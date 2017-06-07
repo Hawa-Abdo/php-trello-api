@@ -44,7 +44,9 @@ class Labels extends AbstractApi
      */
     public function show($id, $color)
     {
-        $colors = array('blue', 'green', 'orange', 'purple', 'red', 'yellow');
+        $colors = array_map(function(array $label){
+            return $label['name'];
+        }, $this->all($id));
 
         if (!in_array($color, $colors)) {
             throw new InvalidArgumentException(sprintf(
@@ -73,7 +75,9 @@ class Labels extends AbstractApi
      */
     public function setName($id, $color, $name)
     {
-        $colors = array('blue', 'green', 'orange', 'purple', 'red', 'yellow');
+        $colors = array_map(function(array $label){
+            return $label['name'];
+        }, $this->all($id));
 
         if (!in_array($color, $colors)) {
             throw new InvalidArgumentException(sprintf(
@@ -83,5 +87,21 @@ class Labels extends AbstractApi
         }
 
         return $this->put('boards/'.rawurlencode($id).'/labelNames/'.rawurlencode($color), array('value' => $name));
+    }
+    
+    /**
+     * Set a label on a given board
+     * @link https://trello.com/docs/api/board/#put-1-boards-board-id-labels
+     *
+     * @param string $id    the board's id
+     * @param array $params attributes
+     *
+     * @return array
+     */
+    public function setLabel($id, $params = array())
+    {
+        $this->validateRequiredParameters(array('name', 'color'), $params);
+
+        return $this->get($this->getPath($id), $params);
     }
 }
